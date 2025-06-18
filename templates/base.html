@@ -59,20 +59,19 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             {% get_current_language as CURRENT_LANGUAGE %}
-                            {% get_available_languages as AVAILABLE_LANGUAGES %}
-                            {% get_language_info_list for AVAILABLE_LANGUAGES as languages %}
-                            {% for language in languages %}
+                            {% if CURRENT_LANGUAGE == 'lv' %}
                                 <li>
-                                    <form action="{% url 'set_language' %}" method="post" class="d-inline">
-                                        {% csrf_token %}
-                                        <input name="next" type="hidden" value="{{ request.path }}">
-                                        <input name="language" type="hidden" value="{{ language.code }}">
-                                        <button type="submit" class="dropdown-item {% if language.code == CURRENT_LANGUAGE %}active{% endif %}">
-                                            {{ language.name_local }}
-                                        </button>
-                                    </form>
+                                    <a href="/" class="dropdown-item">
+                                        English
+                                    </a>
                                 </li>
-                            {% endfor %}
+                            {% else %}
+                                <li>
+                                    <a href="/lv/" class="dropdown-item">
+                                        Latviešu
+                                    </a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </li>
 
