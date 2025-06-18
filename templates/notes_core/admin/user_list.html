@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "User Management" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="{% trans 'Search users...' %}"
+                                   value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="role" class="form-select" onchange="this.form.submit()">
+                                <option value="">{% trans "All Roles" %}</option>
+                                {% for role, label in user_roles %}
+                                    <option value="{{ role }}" {% if request.GET.role == role %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> {% trans "Search" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> {% trans "Users" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Username" %}</th>
+                                    <th>{% trans "Email" %}</th>
+                                    <th>{% trans "Role" %}</th>
+                                    <th>{% trans "Notes" %}</th>
+                                    <th>{% trans "Avg Rating" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.get_role_display }}</td>
+                                        <td>{{ user.notes_count }}</td>
+                                        <td>
+                                            {% if user.avg_rating %}
+                                                <span class="text-warning">
+                                                    <i class="bi bi-star-fill"></i>
+                                                    {{ user.avg_rating|floatformat:1 }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">{% trans "Active" %}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{% trans "Blocked" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not user.is_administrator %}
+                                                <button type="button" 
+                                                        class="btn btn-sm {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} toggle-status"
+                                                        data-user-id="{{ user.pk }}">
+                                                    {% if user.is_active %}
+                                                        <i class="bi bi-lock"></i> {% trans "Block" %}
+                                                    {% else %}
+                                                        <i class="bi bi-unlock"></i> {% trans "Unblock" %}
+                                                    {% endif %}
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No users found." %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                        <nav aria-label="{% trans 'Page navigation' %}" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">&laquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                            {% trans "Previous" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                            {% trans "Next" %}
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.toggle-status').forEach(button => {
+    button.addEventListener('click', async function() {
+        const userId = this.dataset.userId;
+        
+        try {
+            const response = await fetch(`{% url 'admin_toggle_user' 0 %}`.replace('0', userId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            
+            if (response.ok) {
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Home" %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Search and Filters -->
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-search"></i> {% trans "Search & Filters" %}
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'home' %}">
+                    <div class="mb-3">
+                        <label for="q" class="form-label">{% trans "Search" %}</label>
+                        <input type="text" class="form-control" id="q" name="q" value="{{ request.GET.q }}"
+                               placeholder="{% trans 'Search notes...' %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">{% trans "Subject" %}</label>
+                        <select class="form-select" id="subject" name="subject">
+                            <option value="">{% trans "All Subjects" %}</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject }}" {% if request.GET.subject == subject %}selected{% endif %}>
+                                    {{ subject }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Tags" %}</label>
+                        <div class="overflow-auto" style="max-height: 200px;">
+                            {% for tag in tags %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tag" 
+                                           value="{{ tag.slug }}" id="tag_{{ tag.slug }}"
+                                           {% if tag.slug in request.GET.tag %}checked{% endif %}>
+                                    <label class="form-check-label" for="tag_{{ tag.slug }}">
+                                        {{ tag.name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> {% trans "Apply Filters" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes List -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 mb-0">{% trans "Study Notes" %}</h2>
+            {% if user.is_authenticated and user.role != 'VISITOR' %}
+                <a href="{% url 'note_create' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> {% trans "Upload Note" %}
+                </a>
+            {% endif %}
+        </div>
+
+        {% if notes %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for note in notes %}
+                    <div class="col">
+                        <div class="card h-100 note-card">
+                            {% if note.file %}
+                                <div class="card-img-top bg-light text-center p-3">
+                                    <i class="bi bi-file-earmark-text display-4"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ note.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ note.subject }}</h6>
+                                <p class="card-text text-truncate">{{ note.description }}</p>
+                                
+                                {% if note.tags.all %}
+                                    <div class="mb-2">
+                                        {% for tag in note.tags.all %}
+                                            <span class="badge bg-secondary">{{ tag.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> {{ note.user.username }}
+                                    </small>
+                                    <div>
+                                        {% if note.avg_rating %}
+                                            <small class="text-warning">
+                                                <i class="bi bi-star-fill"></i> {{ note.avg_rating|floatformat:1 }}
+                                            </small>
+                                        {% endif %}
+                                        <a href="{% url 'note_detail' note.pk %}" class="btn btn-sm btn-outline-primary ms-2">
+                                            {% trans "View" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="{% trans 'Page navigation' %}" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    {% trans "Previous" %}
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    {% trans "Next" %}
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> {% trans "No notes found matching your criteria." %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

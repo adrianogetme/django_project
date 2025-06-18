@@ -1,0 +1,23 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% blocktrans with username=user.username %}Dear {{ username }},{% endblocktrans %}
+
+{% trans "Welcome to NoteShare! We're excited to have you join our community of learners and educators." %}
+
+{% trans "To get started, please verify your email address by clicking the link below:" %}
+{{ protocol }}://{{ domain }}{% url 'verify_email' uidb64=uid token=token %}
+
+{% trans "Once verified, you'll be able to:" %}
+- {% trans "Upload and share your study notes" %}
+- {% trans "Access high-quality study materials from other users" %}
+- {% trans "Rate and provide feedback on notes" %}
+- {% trans "Create a personalized learning experience" %}
+
+{% trans "If you have any questions or need assistance, don't hesitate to contact our support team." %}
+
+{% trans "Happy learning!" %}
+
+{% trans "Best regards," %}
+{% trans "The NoteShare Team" %}
+{% endautoescape %} 

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% if form.instance.pk %}{% trans "Edit Note" %}{% else %}{% trans "Create Note" %}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">
+                {% if form.instance.pk %}
+                    {% trans "Edit Note" %}
+                {% else %}
+                    {% trans "Create New Note" %}
+                {% endif %}
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% bootstrap_form form %}
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i>
+                                {% if form.instance.pk %}
+                                    {% trans "Save Changes" %}
+                                {% else %}
+                                    {% trans "Create Note" %}
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x"></i> {% trans "Cancel" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            placeholder: '{% trans "Select tags..." %}',
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %} 

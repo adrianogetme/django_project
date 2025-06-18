@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Welcome to NoteShare" %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="display-4 mb-4">{% trans "Welcome to NoteShare" %}</h1>
+        <p class="lead mb-4">{% trans "Share your study notes and learn from others." %}</p>
+        
+        {% if not user.is_authenticated %}
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-sm-3">{% trans "Get Started" %}</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-4">{% trans "Login" %}</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if recent_notes %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">{% trans "Recent Notes" %}</h2>
+        </div>
+        {% for note in recent_notes %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ note.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ note.subject }}</h6>
+                        <p class="card-text">{{ note.description|truncatewords:30 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ note.created_at|date }}</small>
+                            <a href="{% url 'note_detail' note.pk %}" class="btn btn-sm btn-primary">{% trans "View" %}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %} 

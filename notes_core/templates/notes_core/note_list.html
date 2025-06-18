@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}
+    {% if tag_name %}
+        {% trans "Notes tagged with" %} "{{ tag_name }}"
+    {% else %}
+        {% trans "All Notes" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            {% if tag_name %}
+                <h1 class="mb-4">{% trans "Notes tagged with" %} "{{ tag_name }}"</h1>
+            {% else %}
+                <h1 class="mb-4">{% trans "All Notes" %}</h1>
+            {% endif %}
+
+            {% if notes %}
+                <div class="row">
+                    {% for note in notes %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ note.title }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ note.subject }}</h6>
+                                    <p class="card-text">{{ note.description|truncatewords:30 }}</p>
+                                    
+                                    {% if note.tags.all %}
+                                        <div class="mb-2">
+                                            {% for tag in note.tags.all %}
+                                                <a href="{% url 'notes_by_tag' tag.name %}" class="badge bg-secondary text-decoration-none me-1">
+                                                    {{ tag.name }}
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="text-muted small mb-2">
+                                        <i class="bi bi-person"></i> {{ note.user.username }}
+                                        <i class="bi bi-clock ms-2"></i> {{ note.created_at|timesince }}
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <a href="{% url 'note_detail' note.pk %}" class="btn btn-primary btn-sm">
+                                        {% trans "View Details" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if notes.has_other_pages %}
+                    <nav aria-label="{% trans 'Notes pagination' %}" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if notes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ notes.previous_page_number }}">
+                                        {% trans "Previous" %}
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in notes.paginator.page_range %}
+                                <li class="page-item {% if notes.number == num %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endfor %}
+
+                            {% if notes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ notes.next_page_number }}">
+                                        {% trans "Next" %}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    {% if tag_name %}
+                        {% trans "No notes found with this tag." %}
+                    {% else %}
+                        {% trans "No notes available." %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

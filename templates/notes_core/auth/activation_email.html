@@ -1,0 +1,16 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
+
+{% trans "Thank you for registering with NoteShare. To activate your account, please click on the link below:" %}
+
+http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+
+{% trans "This link will expire in 24 hours." %}
+
+{% trans "If you did not register for NoteShare, please ignore this email." %}
+
+{% trans "Best regards," %}
+{% trans "The NoteShare Team" %}
+{% endautoescape %} 

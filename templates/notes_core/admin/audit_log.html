@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Audit Log" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <select name="action_type" class="form-select" onchange="this.form.submit()">
+                                <option value="">{% trans "All Actions" %}</option>
+                                {% for action_type, label in action_types %}
+                                    <option value="{{ action_type }}" 
+                                            {% if request.GET.action_type == action_type %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> {% trans "Audit Log" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Admin" %}</th>
+                                    <th>{% trans "Action" %}</th>
+                                    <th>{% trans "Description" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for action in actions %}
+                                    <tr>
+                                        <td>{{ action.created_at|date:"j M Y H:i" }}</td>
+                                        <td>{{ action.admin.username }}</td>
+                                        <td>
+                                            {% if action.action_type == 'USER_BLOCK' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-lock"></i> {% trans "User Blocked" %}
+                                                </span>
+                                            {% elif action.action_type == 'USER_UNBLOCK' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-unlock"></i> {% trans "User Unblocked" %}
+                                                </span>
+                                            {% elif action.action_type == 'NOTE_DELETE' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-trash"></i> {% trans "Note Deleted" %}
+                                                </span>
+                                            {% elif action.action_type == 'NOTE_APPROVE' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check"></i> {% trans "Note Approved" %}
+                                                </span>
+                                            {% elif action.action_type == 'REPORT_RESOLVE' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-flag"></i> {% trans "Report Resolved" %}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ action.description }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No actions found." %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                        <nav aria-label="{% trans 'Page navigation' %}" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">&laquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                            {% trans "Previous" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                            {% trans "Next" %}
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

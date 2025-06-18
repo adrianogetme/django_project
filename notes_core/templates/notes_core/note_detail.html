@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="mb-3">{{ note.title }}</h1>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ note.subject }}</h5>
+                    <p class="card-text">{{ note.description }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            <small>
+                                <i class="bi bi-person"></i> {{ note.user.username }}
+                                <i class="bi bi-clock ms-2"></i> {{ note.created_at|timesince }}
+                            </small>
+                        </div>
+                        {% if note.file %}
+                        <a href="{{ note.file.url }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="bi bi-download"></i> {% trans "Download" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if note.tags.exists %}
+                <div class="card-footer bg-transparent">
+                    {% for tag in note.tags.all %}
+                    <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Comments Section -->
+            <h3 class="mb-3">{% trans "Comments" %}</h3>
+            {% if user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="post" action="{% url 'add_comment' note.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <textarea name="text" class="form-control" rows="3" required placeholder="{% trans 'Write a comment...' %}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-chat"></i> {% trans "Post Comment" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if comments %}
+            <div class="comments">
+                {% for comment in comments %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <p class="card-text">{{ comment.text }}</p>
+                        <div class="text-muted">
+                            <small>
+                                <i class="bi bi-person"></i> {{ comment.user.username }}
+                                <i class="bi bi-clock ms-2"></i> {{ comment.created_at|timesince }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">{% trans "No comments yet." %}</p>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            {% if user.is_authenticated %}
+            <!-- Rating Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Rate this note" %}</h5>
+                    <form method="post" action="{% url 'rate_note' note.id %}">
+                        {% csrf_token %}
+                        <div class="rating">
+                            {% for i in "12345" %}
+                            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}"
+                                {% if user_rating.value == i %}checked{% endif %}>
+                            <label for="star{{ i }}"><i class="bi bi-star-fill"></i></label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm mt-2">
+                            <i class="bi bi-star"></i> {% trans "Submit Rating" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Report Button -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Report this note" %}</h5>
+                    <a href="{% url 'report_note' note.id %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-flag"></i> {% trans "Report" %}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

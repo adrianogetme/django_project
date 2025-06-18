@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "My Profile" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">{% trans "Profile Information" %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% bootstrap_form form %}
+                        <button type="submit" class="btn btn-primary">
+                            {% trans "Update Profile" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Profile Sections -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">{% trans "Account Statistics" %}</h4>
+                </div>
+                <div class="card-body">
+                    <p>{% trans "Member since:" %} {{ user.date_joined|date:"F j, Y" }}</p>
+                    <p>{% trans "Last login:" %} {{ user.last_login|date:"F j, Y" }}</p>
+                    <p>{% trans "Total Notes:" %} {{ total_notes }}</p>
+                    <p>{% trans "Public Notes:" %} {{ public_notes }}</p>
+                    <p>{% trans "Average Rating:" %} {{ avg_rating|floatformat:1 }}</p>
+                    <p>{% trans "Total Comments:" %} {{ total_comments }}</p>
+                </div>
+            </div>
+
+            <!-- Recent Notes -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{% trans "Recent Notes" %}</h4>
+                </div>
+                <div class="card-body">
+                    {% if recent_notes %}
+                        <div class="list-group">
+                            {% for note in recent_notes %}
+                                <a href="{% url 'note_detail' note.pk %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ note.title }}</h5>
+                                        <small>{{ note.created_at|date:"M j, Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ note.subject }}</p>
+                                    <small>{% if note.is_public %}{% trans "Public" %}{% else %}{% trans "Private" %}{% endif %}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">{% trans "No notes created yet." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- User Stats -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">{% trans "My Statistics" %}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h5>{% trans "Notes" %}</h5>
+                            <p class="h2">{{ user.notes.count }}</p>
+                        </div>
+                        <div class="col-4">
+                            <h5>{% trans "Rating" %}</h5>
+                            <p class="h2">{{ avg_rating|default:"-" }}</p>
+                        </div>
+                        <div class="col-4">
+                            <h5>{% trans "Views" %}</h5>
+                            <p class="h2">{{ total_views }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">{% trans "Quick Actions" %}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'note_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> {% trans "Upload Note" %}
+                        </a>
+                        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-gear"></i> {% trans "Settings" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Notes -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{% trans "My Notes" %}</h4>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-sort-down"></i> {% trans "Sort" %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="?sort=title">
+                                    {% trans "Title" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?sort=created_at">
+                                    {% trans "Date" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?sort=rating">
+                                    {% trans "Rating" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?sort=downloads">
+                                    {% trans "Downloads" %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Title" %}</th>
+                                    <th>{% trans "Subject" %}</th>
+                                    <th>{% trans "Rating" %}</th>
+                                    <th>{% trans "Downloads" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for note in notes %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'note_detail' note.pk %}" class="text-decoration-none">
+                                                {{ note.title }}
+                                            </a>
+                                        </td>
+                                        <td>{{ note.subject }}</td>
+                                        <td>
+                                            <span class="text-warning">
+                                                {{ note.average_rating|default:"-" }}
+                                                {% if note.average_rating %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>{{ note.download_count }}</td>
+                                        <td>{{ note.created_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'note_edit' note.pk %}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#deleteModal" 
+                                                        data-note-id="{{ note.pk }}"
+                                                        data-note-title="{{ note.title }}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <p class="text-muted mb-3">
+                                                {% trans "You haven't uploaded any notes yet." %}
+                                            </p>
+                                            <a href="{% url 'note_create' %}" class="btn btn-primary">
+                                                {% trans "Upload Your First Note" %}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if notes.has_other_pages %}
+                        <nav aria-label="{% trans 'Notes pagination' %}">
+                            <ul class="pagination justify-content-center">
+                                {% if notes.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ notes.previous_page_number }}">
+                                            {% trans "Previous" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in notes.paginator.page_range %}
+                                    <li class="page-item {% if notes.number == num %}active{% endif %}">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endfor %}
+
+                                {% if notes.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ notes.next_page_number }}">
+                                            {% trans "Next" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Note Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Delete Note" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Are you sure you want to delete" %} "<span id="deleteNoteTitle"></span>"?</p>
+                <p class="text-danger">{% trans "This action cannot be undone." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% trans "Cancel" %}
+                </button>
+                <form id="deleteNoteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        {% trans "Delete" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var noteId = button.getAttribute('data-note-id');
+                var noteTitle = button.getAttribute('data-note-title');
+                
+                var form = deleteModal.querySelector('#deleteNoteForm');
+                var titleSpan = deleteModal.querySelector('#deleteNoteTitle');
+                
+                form.action = "{% url 'note_delete' 0 %}".replace('0', noteId);
+                titleSpan.textContent = noteTitle;
+            });
+        }
+    });
+</script>
+{% endblock %} 

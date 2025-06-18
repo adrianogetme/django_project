@@ -1,0 +1,12 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% blocktrans with username=user.username %}Dear {{ username }},{% endblocktrans %}
+
+{% blocktrans with title=note.title %}Your note "{{ title }}" has been removed from NoteShare due to a violation of our content guidelines.{% endblocktrans %}
+
+{% trans "If you believe this is a mistake, please contact our support team for assistance." %}
+
+{% trans "Best regards," %}
+{% trans "The NoteShare Team" %}
+{% endautoescape %} 

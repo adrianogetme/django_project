@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Admin Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Overview Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-people display-4 text-primary"></i>
+                    <h5 class="card-title mt-3">{% trans "Total Users" %}</h5>
+                    <p class="display-6">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-journal-text display-4 text-success"></i>
+                    <h5 class="card-title mt-3">{% trans "Total Notes" %}</h5>
+                    <p class="display-6">{{ total_notes }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-flag display-4 text-danger"></i>
+                    <h5 class="card-title mt-3">{% trans "Pending Reports" %}</h5>
+                    <p class="display-6">{{ pending_reports }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-download display-4 text-info"></i>
+                    <h5 class="card-title mt-3">{% trans "Total Downloads" %}</h5>
+                    <p class="display-6">{{ total_downloads }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Reports -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{% trans "Recent Reports" %}</h4>
+                    <a href="{% url 'admin_reports' %}" class="btn btn-outline-primary btn-sm">
+                        {% trans "View All" %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Note" %}</th>
+                                    <th>{% trans "Reporter" %}</th>
+                                    <th>{% trans "Reason" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in recent_reports %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'note_detail' report.note.pk %}">
+                                                {{ report.note.title }}
+                                            </a>
+                                        </td>
+                                        <td>{{ report.reporter.username }}</td>
+                                        <td>{{ report.reason|truncatechars:50 }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-danger"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#actionModal"
+                                                        data-report-id="{{ report.pk }}"
+                                                        data-note-title="{{ report.note.title }}">
+                                                    {% trans "Take Action" %}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No pending reports" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{% trans "Recent Users" %}</h4>
+                    <a href="{% url 'admin_users' %}" class="btn btn-outline-primary btn-sm">
+                        {% trans "View All" %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Username" %}</th>
+                                    <th>{% trans "Email" %}</th>
+                                    <th>{% trans "Role" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                    <tr>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if user.role == 'ADMINISTRATOR' %}primary{% elif user.role == 'REGISTERED' %}success{% else %}secondary{% endif %}">
+                                                {{ user.get_role_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#userModal"
+                                                        data-user-id="{{ user.pk }}"
+                                                        data-username="{{ user.username }}">
+                                                    {% trans "Edit" %}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No users found" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Action Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Take Action" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="actionForm" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>{% trans "Taking action on report for" %} "<span id="reportNoteTitle"></span>"</p>
+                    <div class="mb-3">
+                        <label for="action" class="form-label">{% trans "Action" %}</label>
+                        <select class="form-select" id="action" name="action" required>
+                            <option value="">{% trans "Select action..." %}</option>
+                            <option value="dismiss">{% trans "Dismiss Report" %}</option>
+                            <option value="delete">{% trans "Delete Note" %}</option>
+                            <option value="warn">{% trans "Warn Author" %}</option>
+                            <option value="ban">{% trans "Ban Author" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">{% trans "Comment" %}</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% trans "Cancel" %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Submit" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- User Edit Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Edit User" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="userForm" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>{% trans "Editing user" %} "<span id="editUsername"></span>"</p>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">{% trans "Role" %}</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="VISITOR">{% trans "Visitor" %}</option>
+                            <option value="REGISTERED">{% trans "Registered" %}</option>
+                            <option value="ADMINISTRATOR">{% trans "Administrator" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active">
+                            <label class="form-check-label" for="is_active">
+                                {% trans "Active Account" %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% trans "Cancel" %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Save Changes" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Report Action Modal
+        var actionModal = document.getElementById('actionModal');
+        if (actionModal) {
+            actionModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var reportId = button.getAttribute('data-report-id');
+                var noteTitle = button.getAttribute('data-note-title');
+                
+                var form = actionModal.querySelector('#actionForm');
+                var titleSpan = actionModal.querySelector('#reportNoteTitle');
+                
+                form.action = "{% url 'admin_report_action' 0 %}".replace('0', reportId);
+                titleSpan.textContent = noteTitle;
+            });
+        }
+
+        // User Edit Modal
+        var userModal = document.getElementById('userModal');
+        if (userModal) {
+            userModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-user-id');
+                var username = button.getAttribute('data-username');
+                
+                var form = userModal.querySelector('#userForm');
+                var usernameSpan = userModal.querySelector('#editUsername');
+                
+                form.action = "{% url 'admin_user_edit' 0 %}".replace('0', userId);
+                usernameSpan.textContent = username;
+            });
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,12 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% blocktrans with username=user.username %}Dear {{ username }},{% endblocktrans %}
+
+{% trans "We regret to inform you that your NoteShare account has been suspended due to a violation of our community guidelines." %}
+
+{% trans "If you believe this is a mistake, please contact our support team for assistance." %}
+
+{% trans "Best regards," %}
+{% trans "The NoteShare Team" %}
+{% endautoescape %} 

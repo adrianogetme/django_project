@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Admin Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Stats Overview -->
+    <div class="col-md-12 mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-people display-4 text-primary"></i>
+                        <h5 class="card-title mt-3">{% trans "Total Users" %}</h5>
+                        <p class="display-6">{{ total_users }}</p>
+                        <div class="small text-muted">
+                            {{ active_users }} {% trans "active" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-journal-text display-4 text-success"></i>
+                        <h5 class="card-title mt-3">{% trans "Total Notes" %}</h5>
+                        <p class="display-6">{{ total_notes }}</p>
+                        <div class="small text-muted">
+                            {{ notes_today }} {% trans "today" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-flag display-4 text-danger"></i>
+                        <h5 class="card-title mt-3">{% trans "Reports" %}</h5>
+                        <p class="display-6">{{ total_reports }}</p>
+                        <div class="small text-muted">
+                            {{ pending_reports }} {% trans "pending" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-download display-4 text-info"></i>
+                        <h5 class="card-title mt-3">{% trans "Downloads" %}</h5>
+                        <p class="display-6">{{ total_downloads }}</p>
+                        <div class="small text-muted">
+                            {{ downloads_today }} {% trans "today" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-flag"></i> {% trans "Recent Reports" %}
+                </h5>
+                <a href="{% url 'admin_reports' %}" class="btn btn-primary btn-sm">
+                    {% trans "View All" %}
+                </a>
+            </div>
+            <div class="card-body">
+                {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Note" %}</th>
+                                    <th>{% trans "Reported By" %}</th>
+                                    <th>{% trans "Reason" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'note_detail' report.note.pk %}" class="text-decoration-none">
+                                                {{ report.note.title }}
+                                            </a>
+                                        </td>
+                                        <td>{{ report.user.username }}</td>
+                                        <td>{{ report.reason|truncatechars:50 }}</td>
+                                        <td>{{ report.created_at|date:"j M Y" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'note_detail' report.note.pk %}" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#deleteNoteModal{{ report.note.pk }}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- Delete Note Modal -->
+                                            <div class="modal fade" id="deleteNoteModal{{ report.note.pk }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">{% trans "Delete Reported Note" %}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>{% trans "Are you sure you want to delete this note?" %}</p>
+                                                            <p class="text-muted">{{ report.note.title }}</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                {% trans "Cancel" %}
+                                                            </button>
+                                                            <form method="post" action="{% url 'admin_note_delete' report.note.pk %}">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    {% trans "Delete" %}
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle display-4 text-success"></i>
+                        <p class="mt-3">{% trans "No pending reports" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <!-- User Management -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-people"></i> {% trans "User Management" %}
+                </h5>
+                <a href="{% url 'admin_users' %}" class="btn btn-primary btn-sm">
+                    {% trans "View All" %}
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for user in recent_users %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ user.username }}</strong>
+                                <small class="d-block text-muted">
+                                    {{ user.role }}
+                                </small>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <form method="post" action="{% url 'admin_toggle_user' user.pk %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm 
+                                            {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                        {% if user.is_active %}
+                                            <i class="bi bi-lock"></i>
+                                        {% else %}
+                                            <i class="bi bi-unlock"></i>
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="list-group-item text-center py-4">
+                        <p class="text-muted mb-0">{% trans "No users found" %}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- System Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i> {% trans "System Stats" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('statsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {
+                    label: '{% trans "New Users" %}',
+                    data: {{ new_users_data }},
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                },
+                {
+                    label: '{% trans "New Notes" %}',
+                    data: {{ new_notes_data }},
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 
