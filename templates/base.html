@@ -44,7 +44,7 @@
                     {% endif %}
                     {% if user.role == 'ADMINISTRATOR' %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                            <a class="nav-link" href="{% url 'admin:index' %}">
                                 <i class="bi bi-shield-lock"></i> {% trans "Admin Panel" %}
                             </a>
                         </li>
